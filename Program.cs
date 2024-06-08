@@ -4,6 +4,13 @@ using System.Text.Json.Nodes;
 
 namespace OpcodeExtractor;
 
+public enum OutputFormat
+{
+    All = -1,
+    FFXIV_ACT_Plugin,
+    OverlayPlugin
+}
+
 public class Program
 {
     static async Task<int> Main(string[] args)
@@ -16,21 +23,68 @@ public class Program
             description: "The game executable to map.");
         var dumpAllOpcodesArgument = new Argument<bool>(
             name: "dumpAllOpcodes",
-            description: "The opcode map to use.");
+            description: "Should all opcodes be dumped or just those specified in the map file. Default = \"False\"");
+        var outputFormatArgument = new Argument<OutputFormat>(
+            name: "outputFormat",
+            description: "Which output format to use. Default = \"All\"");
         dumpAllOpcodesArgument.SetDefaultValue(false);
+        outputFormatArgument.SetDefaultValue(OutputFormat.All);
 
         var rootCommand = new RootCommand("Map opcodes as defined in opcodeMapFile for executable gameExecutable");
         rootCommand.AddArgument(opcodeFileMapArgument);
         rootCommand.AddArgument(gameExecutableArgument);
         rootCommand.AddArgument(dumpAllOpcodesArgument);
+        rootCommand.AddArgument(outputFormatArgument);
 
-        rootCommand.SetHandler((opcodeMapFile, gameExecutable, dumpAllOpcodes) =>
+        rootCommand.SetHandler((opcodeMapFile, gameExecutable, dumpAllOpcodes, outputFormat) =>
             {
-                ExtractOpcodes(opcodeMapFile!, gameExecutable!, dumpAllOpcodes);
+                var opcodes = ExtractOpcodes(opcodeMapFile!, gameExecutable!, dumpAllOpcodes);
+                OutputOpcodes(opcodes, outputFormat);
             },
-            opcodeFileMapArgument, gameExecutableArgument, dumpAllOpcodesArgument);
+            opcodeFileMapArgument, gameExecutableArgument, dumpAllOpcodesArgument, outputFormatArgument);
 
         return await rootCommand.InvokeAsync(args);
+    }
+
+    private static void OutputOpcodes(Dictionary<int, string> opcodes, OutputFormat outputFormat)
+    {
+        if (outputFormat == OutputFormat.All || outputFormat == OutputFormat.FFXIV_ACT_Plugin)
+        {
+            OutputOpcodesForFFXIV_ACT_Plugin(opcodes);
+        }
+        if (outputFormat == OutputFormat.All || outputFormat == OutputFormat.OverlayPlugin)
+        {
+            OutputOpcodesForOverlayPlugin(opcodes);
+        }
+    }
+
+    private static void OutputOpcodesForFFXIV_ACT_Plugin(Dictionary<int, string> opcodes)
+    {
+        foreach (var entry in opcodes)
+        {
+            Console.WriteLine($"{entry.Value}|{entry.Key:x}");
+        }
+    }
+
+    private static void OutputOpcodesForOverlayPlugin(Dictionary<int, string> opcodes)
+    {
+        Dictionary<string, Dictionary<string, int>> overlayPluginMap = [];
+
+        foreach (var entry in opcodes)
+        {
+            Dictionary<string, int> opEntry = new Dictionary<string, int>()
+            {
+                ["opcode"] = entry.Key,
+                ["size"] = 0,
+            };
+
+            overlayPluginMap[entry.Value] = opEntry;
+        }
+
+        Console.WriteLine(JsonSerializer.Serialize(overlayPluginMap, new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        }));
     }
 
     /// <summary>
@@ -39,13 +93,13 @@ public class Program
     /// <param name="opcodeMapFile">The opcode map to use</param>
     /// <param name="gameExecutable">The game executable to map</param>
     /// <param name="dumpAllOpcodes">Whether to dump all opcodes, or just the mapped opcodes</param>
-    public static void ExtractOpcodes(FileInfo opcodeMapFile, FileInfo gameExecutable, bool dumpAllOpcodes)
+    public static Dictionary<int, string> ExtractOpcodes(FileInfo opcodeMapFile, FileInfo gameExecutable, bool dumpAllOpcodes)
     {
         var opcodeMapData = JsonSerializer.Deserialize<JsonNode>(File.ReadAllText(opcodeMapFile.FullName), new JsonSerializerOptions()
         {
             ReadCommentHandling = JsonCommentHandling.Skip,
         });
-        if (opcodeMapData == null) return;
+        if (opcodeMapData == null) return [];
 
         var opcodeMethod = opcodeMapData["method"]?.ToString() ?? "";
 
@@ -53,8 +107,8 @@ public class Program
         switch (opcodeMethod)
         {
             case "vtable":
-                OpcodeExtractorVTable.Extract(opcodeMapData, gameData, dumpAllOpcodes);
-                break;
+                return OpcodeExtractorVTable.Extract(opcodeMapData, gameData, dumpAllOpcodes);
         }
+        return [];
     }
 }

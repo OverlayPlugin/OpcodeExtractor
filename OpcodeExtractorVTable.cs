@@ -7,7 +7,7 @@ public static class OpcodeExtractorVTable
 {
     private static Regex WhitespaceRegex = new Regex("\\s");
 
-    internal unsafe static void Extract(JsonNode opcodeMapData, byte[] gameData, bool dumpAllOpcodes)
+    internal unsafe static Dictionary<int, string> Extract(JsonNode opcodeMapData, byte[] gameData, bool dumpAllOpcodes)
     {
         var signatureData = opcodeMapData["signature"]!;
         string signature = "";
@@ -26,7 +26,7 @@ public static class OpcodeExtractorVTable
         if (matches.Count != 1)
         {
             Console.Error.WriteLine($"Invalid matches count {matches.Count} from SigScan");
-            return;
+            return [];
         }
 
         Dictionary<int, string> indexMap = [];
@@ -35,7 +35,7 @@ public static class OpcodeExtractorVTable
         if (mapData.GetValueKind() != System.Text.Json.JsonValueKind.Object)
         {
             Console.Error.WriteLine("Invalid data type for \"map\" in opcodes file");
-            return;
+            return [];
         }
 
         foreach (var entry in mapData.AsObject())
@@ -47,6 +47,8 @@ public static class OpcodeExtractorVTable
         Console.WriteLine($"Scanning for opcode maps for {indexMap.Count} opcodes, dumping all: {dumpAllOpcodes}");
 
         var offset = matches[0];
+
+        var opcodeMap = new Dictionary<int, string>();
 
         fixed (byte* ptr = gameData)
         {
@@ -72,14 +74,16 @@ public static class OpcodeExtractorVTable
 
                 if (indexMap.TryGetValue(vfTableIndex, out var name))
                 {
-                    Console.WriteLine($"{name}|{opcode:x}");
+                    opcodeMap[opcode] = name;
                 }
                 else if (dumpAllOpcodes)
                 {
-                    Console.WriteLine($"Unknown_{vfTableIndex}|{opcode:x}");
+                    opcodeMap[opcode] = $"Unknown_{vfTableIndex}";
                 }
             }
         }
+
+        return opcodeMap;
     }
 
     private static unsafe int GetVFTableIndex(byte* caseBodyPtr)
