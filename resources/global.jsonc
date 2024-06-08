@@ -1,0 +1,64 @@
+{
+    "method": "vtable",
+    // signature accepts hex values, optionally spaced, with `??` acting as a wildcard
+    // These will be merged into one signature for scanning
+    "signature": [
+        // MOV        RAX,qword ptr [param_3 + 0x10]
+        "49 8B 40 10",
+        // MOV        R10,qword ptr [RAX + 0x38]
+        "4C 8B 50 38",
+        // MOVZX      EAX,word ptr [R10 + 0x2]
+        "41 0F B7 42 02",
+        // ADD        EAX,{{switch table offset}}
+        // ADD        EAX,-0x65
+        "83 C0 ??",
+        // CMP        EAX,{{switch table count}}
+        // CMP        EAX,0x382
+        "3D ?? ?? ?? ??",
+        // JA         {{default case}}
+        // JA         switchD_141987dbf::caseD_67
+        "0F 87 ?? ?? ?? ??",
+        // LEA        R11,{{image base}}
+        // LEA        R11,[IMAGE_DOS_HEADER_140000000]
+        "4C 8D 1D ?? ?? ?? ??",
+        // CDQE
+        "48 98",
+        // MOV        R9D,{{switch table address offset from image base}}
+        // MOV        R9D,dword ptr [R11 + RAX*offset switchD_141987dbf::switchdataD_14198a304 + 0x198a304]
+        "45 8B 8C 83 ?? ?? ?? ??"
+    ],
+    "map": {
+        "RSVData": 121,
+        "Countdown": 141,
+        "CountdownCancel": 142,
+        "StatusEffectList": 201,
+        "StatusEffectList2": 203,
+        "BossStatusEffectList": 204,
+        "EffectResult": 206,
+        "EffectResultBasic": 211,
+        "ActorControl": 217,
+        "ActorControlSelf": 218,
+        "ActorControlTarget": 219,
+        "UpdateHpMpTp": 220,
+        "Ability1": 221,
+        "Ability8": 224,
+        "Ability16": 225,
+        "Ability24": 226,
+        "Ability32": 227,
+        "StatusEffectList3": 230,
+        "PlayerSpawn": 260,
+        "NpcSpawn": 261,
+        "NpcSpawn2": 262,
+        "ActorMove": 264,
+        "ActorSetPos": 267,
+        "ActorCast": 269,
+        "MapEffect": 392,
+        "SystemLogMessage": 398,
+        "BattleTalk2": 404,
+        "NpcYell": 438,
+        "PresetWaymark": 519,
+        "Waymark": 520,
+        "ActorGauge": 570,
+        "CEDirector": 634
+    }
+}
