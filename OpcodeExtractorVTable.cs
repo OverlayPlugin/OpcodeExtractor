@@ -75,10 +75,14 @@ public static class OpcodeExtractorVTable
                 if (indexMap.TryGetValue(vfTableIndex, out var name))
                 {
                     opcodeMap[opcode] = name;
+                    if (dumpAllOpcodes)
+                    {
+                        opcodeMap[opcode + 0x10000] = $"Index_{vfTableIndex}";
+                    }
                 }
                 else if (dumpAllOpcodes)
                 {
-                    opcodeMap[opcode] = $"Unknown_{vfTableIndex}";
+                    opcodeMap[opcode] = $"Index_{vfTableIndex}";
                 }
             }
         }
