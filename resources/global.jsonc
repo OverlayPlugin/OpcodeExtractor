@@ -29,8 +29,8 @@
     ],
     "map": {
         "RSVData": 125,
-        "Countdown": 147,
-        "CountdownCancel": 148,
+        "Countdown": 145,
+        "CountdownCancel": 146,
         "StatusEffectList": 205,
         "StatusEffectList2": 207,
         "BossStatusEffectList": 208,
