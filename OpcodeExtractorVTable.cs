@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace OpcodeExtractor;
@@ -7,7 +8,7 @@ public static class OpcodeExtractorVTable
 {
     private static Regex WhitespaceRegex = new Regex("\\s");
 
-    internal unsafe static Dictionary<int, string> Extract(JsonNode opcodeMapData, byte[] gameData, bool dumpAllOpcodes)
+    internal unsafe static Dictionary<int, string> Extract(JsonNode opcodeMapData, byte[] gameData, bool dumpAllOpcodes, string inputMapKey)
     {
         var signatureData = opcodeMapData["signature"]!;
         string signature = "";
@@ -31,8 +32,8 @@ public static class OpcodeExtractorVTable
 
         Dictionary<int, string> indexMap = [];
 
-        var mapData = opcodeMapData["map"]!;
-        if (mapData.GetValueKind() != System.Text.Json.JsonValueKind.Object)
+        var mapData = opcodeMapData[inputMapKey]!;
+        if (mapData == null || mapData.GetValueKind() != System.Text.Json.JsonValueKind.Object)
         {
             Console.Error.WriteLine("Invalid data type for \"map\" in opcodes file");
             return [];
@@ -44,6 +45,12 @@ public static class OpcodeExtractorVTable
             indexMap[entryIndex] = entry.Key;
         }
 
+        if (!ReadJSONInt(opcodeMapData, "switchTableOffset_offset", out var switchTableOffset_offset)) return [];
+        if (!ReadJSONInt(opcodeMapData, "switchTableCount_offset", out var switchTableCount_offset)) return [];
+        if (!ReadJSONInt(opcodeMapData, "defaultCaseAddr_offset", out var defaultCaseAddr_offset)) return [];
+        if (!ReadJSONInt(opcodeMapData, "imageBaseOffset_offset", out var imageBaseOffset_offset)) return [];
+        if (!ReadJSONInt(opcodeMapData, "switchTableDataOffset_offset", out var switchTableDataOffset_offset)) return [];
+
         Console.WriteLine($"Scanning for opcode maps for {indexMap.Count} opcodes, dumping all: {dumpAllOpcodes}");
 
         var offset = matches[0];
@@ -54,11 +61,11 @@ public static class OpcodeExtractorVTable
         {
             byte* funcPtr = ptr + offset;
 
-            var switchTableOffset = *(sbyte*)(funcPtr + 15);
-            var switchTableCount = *(int*)(funcPtr + 17);
-            var defaultCaseAddr = offset + 23 + Common.ExtractRIPOffsetFromPtr(funcPtr + 23);
-            var imageBaseOffset = offset + 30 + Common.ExtractRIPOffsetFromPtr(funcPtr + 30);
-            var switchTableDataOffset = *(int*)(funcPtr + 40);
+            var switchTableOffset = *(sbyte*)(funcPtr + switchTableOffset_offset);
+            var switchTableCount = *(int*)(funcPtr + switchTableCount_offset);
+            var defaultCaseAddr = offset + defaultCaseAddr_offset + Common.ExtractRIPOffsetFromPtr(funcPtr + defaultCaseAddr_offset);
+            var imageBaseOffset = offset + imageBaseOffset_offset + Common.ExtractRIPOffsetFromPtr(funcPtr + imageBaseOffset_offset);
+            var switchTableDataOffset = *(int*)(funcPtr + switchTableDataOffset_offset);
             var switchTableDataPtr = (int*)(ptr + imageBaseOffset + switchTableDataOffset);
 
             for (int i = 0; i <= switchTableCount; ++i)
@@ -88,6 +95,20 @@ public static class OpcodeExtractorVTable
         }
 
         return opcodeMap;
+    }
+
+    private static bool ReadJSONInt(JsonNode opcodeMapData, string key, out int value)
+    {
+        var mapData = opcodeMapData[key]!;
+        if (mapData.GetValueKind() != System.Text.Json.JsonValueKind.Number)
+        {
+            Console.Error.WriteLine($"Invalid data type for \"${key}\" in opcodes file");
+            value = 0;
+            return false;
+        }
+
+        value = mapData.GetValue<int>();
+        return true;
     }
 
     private static unsafe int GetVFTableIndex(byte* caseBodyPtr)

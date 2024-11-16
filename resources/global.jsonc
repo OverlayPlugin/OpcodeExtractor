@@ -27,10 +27,12 @@
         // MOV        R9D,dword ptr [R11 + RAX*offset switchD_141987dbf::switchdataD_14198a304 + 0x198a304]
         "45 8B 8C 83 ?? ?? ?? ??"
     ],
-    "map": {
-        "RSVData": 127,
-        "Countdown": 147,
-        "CountdownCancel": 148,
+    "switchTableOffset_offset": 15,
+    "switchTableCount_offset": 17,
+    "defaultCaseAddr_offset": 23,
+    "imageBaseOffset_offset": 30,
+    "switchTableDataOffset_offset": 40,
+    "FFXIV_ACT_Plugin": {
         "StatusEffectList": 207,
         "StatusEffectList2": 209,
         "BossStatusEffectList": 211,
@@ -52,15 +54,20 @@
         "ActorMove": 272,
         "ActorSetPos": 275,
         "ActorCast": 277,
+        "SystemLogMessage": 408,
+        "PresetWaymark": 534,
+        "Waymark": 535,
+        "ActorGauge": 585
+    },
+    "OverlayPlugin": {
+        "RSVData": 127,
+        "Countdown": 147,
+        "CountdownCancel": 148,
         "SpawnObject": 284,
         "DespawnObject": 285,
         "MapEffect": 402,
-        "SystemLogMessage": 408,
         "BattleTalk2": 414,
         "NpcYell": 448,
-        "PresetWaymark": 534,
-        "Waymark": 535,
-        "ActorGauge": 585,
         "CEDirector": 649
     }
 }
