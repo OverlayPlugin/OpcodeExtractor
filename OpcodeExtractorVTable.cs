@@ -65,7 +65,8 @@ public static class OpcodeExtractorVTable
             var switchTableOffset = *(sbyte*)(funcPtr + switchTableOffset_offset);
             var switchTableCount = *(int*)(funcPtr + switchTableCount_offset);
             Console.WriteLine($"Expected {expectedSwitchTableCount} entries, found {switchTableCount}");
-            if (expectedSwitchTableCount != switchTableCount) {
+            if (expectedSwitchTableCount != switchTableCount)
+            {
                 Console.WriteLine("Switch table count mismatch, press any key to continue anyways");
                 Console.ReadKey(true);
             }
