@@ -47,6 +47,7 @@ public static class OpcodeExtractorVTable
 
         if (!ReadJSONInt(opcodeMapData, "switchTableOffset_offset", out var switchTableOffset_offset)) return [];
         if (!ReadJSONInt(opcodeMapData, "switchTableCount_offset", out var switchTableCount_offset)) return [];
+        if (!ReadJSONInt(opcodeMapData, "expectedSwitchTableCount", out var expectedSwitchTableCount)) return [];
         if (!ReadJSONInt(opcodeMapData, "defaultCaseAddr_offset", out var defaultCaseAddr_offset)) return [];
         if (!ReadJSONInt(opcodeMapData, "imageBaseOffset_offset", out var imageBaseOffset_offset)) return [];
         if (!ReadJSONInt(opcodeMapData, "switchTableDataOffset_offset", out var switchTableDataOffset_offset)) return [];
@@ -63,6 +64,11 @@ public static class OpcodeExtractorVTable
 
             var switchTableOffset = *(sbyte*)(funcPtr + switchTableOffset_offset);
             var switchTableCount = *(int*)(funcPtr + switchTableCount_offset);
+            Console.WriteLine($"Expected {expectedSwitchTableCount} entries, found {switchTableCount}");
+            if (expectedSwitchTableCount != switchTableCount) {
+                Console.WriteLine("Switch table count mismatch, press any key to continue anyways");
+                Console.ReadKey(true);
+            }
             var defaultCaseAddr = offset + defaultCaseAddr_offset + Common.ExtractRIPOffsetFromPtr(funcPtr + defaultCaseAddr_offset);
             var imageBaseOffset = offset + imageBaseOffset_offset + Common.ExtractRIPOffsetFromPtr(funcPtr + imageBaseOffset_offset);
             var switchTableDataOffset = *(int*)(funcPtr + switchTableDataOffset_offset);

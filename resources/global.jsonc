@@ -32,6 +32,7 @@
     "defaultCaseAddr_offset": 23,
     "imageBaseOffset_offset": 30,
     "switchTableDataOffset_offset": 40,
+    "expectedSwitchTableCount": 897,
     "FFXIV_ACT_Plugin": {
         "StatusEffectList": 207,
         "StatusEffectList2": 209,
